@@ -1,3 +1,0 @@
-@echo off
-echo Opening Framework Gallery...
-start http://localhost:3000/gallery
