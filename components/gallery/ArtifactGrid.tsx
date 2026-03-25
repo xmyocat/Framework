@@ -8,9 +8,10 @@ interface ArtifactGridProps {
     artifacts: Artifact[];
     onArtifactClick: (artifact: Artifact) => void;
     onArtifactDoubleClick?: (artifact: Artifact) => void;
+    onArtifactDelete?: (artifact: Artifact) => void;
 }
 
-export default function ArtifactGrid({ artifacts, onArtifactClick, onArtifactDoubleClick }: ArtifactGridProps) {
+export default function ArtifactGrid({ artifacts, onArtifactClick, onArtifactDoubleClick, onArtifactDelete }: ArtifactGridProps) {
     if (artifacts.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -32,6 +33,7 @@ export default function ArtifactGrid({ artifacts, onArtifactClick, onArtifactDou
                     artifact={artifact}
                     onClick={onArtifactClick}
                     onDoubleClick={onArtifactDoubleClick}
+                    onDelete={onArtifactDelete}
                 />
             ))}
         </div>

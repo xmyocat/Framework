@@ -1,16 +1,35 @@
 'use client';
 
 import { Artifact } from '@/types';
-import { Play, FileText, Image as ImageIcon, Video } from 'lucide-react';
+import { Play, FileText, Image as ImageIcon, Video, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 // import Image from 'next/image'; // Unused, preferring img tag for data/blob URLs for now
 
 interface ArtifactCardProps {
     artifact: Artifact;
     onClick: (artifact: Artifact) => void;
     onDoubleClick?: (artifact: Artifact) => void;
+    onDelete?: (artifact: Artifact) => void;
 }
 
-export default function ArtifactCard({ artifact, onClick, onDoubleClick }: ArtifactCardProps) {
+export default function ArtifactCard({ artifact, onClick, onDoubleClick, onDelete }: ArtifactCardProps) {
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const handleDelete = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card click
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        onDelete?.(artifact);
+        setShowDeleteConfirm(false);
+    };
+
+    const cancelDelete = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setShowDeleteConfirm(false);
+    };
     return (
         <div
             onClick={() => onClick(artifact)}
@@ -19,6 +38,40 @@ export default function ArtifactCard({ artifact, onClick, onDoubleClick }: Artif
         >
             {/* Thumbnail / Content Preview */}
             <div className="relative">
+                {/* Delete Button Overlay */}
+                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={handleDelete}
+                        className="p-2 bg-red-500 text-white rounded-lg shadow-lg hover:bg-red-600 transition-colors"
+                        title="Delete artifact"
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+
+                {/* Confirmation Dialog */}
+                {showDeleteConfirm && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                        <div className="bg-white p-4 rounded-lg shadow-xl max-w-xs mx-4">
+                            <h3 className="font-semibold text-slate-900 mb-2">Delete Artifact?</h3>
+                            <p className="text-sm text-slate-600 mb-4">This action cannot be undone.</p>
+                            <div className="flex gap-2 justify-end">
+                                <button
+                                    onClick={cancelDelete}
+                                    className="px-3 py-1 text-sm bg-slate-100 text-slate-700 rounded hover:bg-slate-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {artifact.type === 'image' && artifact.file_urls?.[0] && (
                     <div className="relative w-full">
                         {/* Using standard img tag for data URLs or external storage URLs if next/image config isn't set up for them yet */}

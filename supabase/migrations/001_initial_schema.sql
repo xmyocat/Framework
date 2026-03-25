@@ -5,7 +5,7 @@ create extension if not exists "uuid-ossp";
 create table artifacts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id),
-  type text check (type in ('audio', 'image', 'text', 'mixed')),
+  type text check (type in ('audio', 'image', 'text', 'video', 'mixed')),
   
   -- Raw content
   file_urls text[], -- Array of storage URLs
