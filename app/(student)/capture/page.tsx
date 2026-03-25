@@ -29,6 +29,14 @@ export default function CapturePage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 router.push('/login');
+                return;
+            }
+
+            // Handle URL parameters for PWA shortcuts
+            const urlParams = new URLSearchParams(window.location.search);
+            const modeParam = urlParams.get('mode') as CaptureMode;
+            if (modeParam && ['audio', 'photo', 'text', 'video'].includes(modeParam)) {
+                setMode(modeParam);
             }
         };
         checkUser();
