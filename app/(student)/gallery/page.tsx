@@ -7,6 +7,7 @@ import { useArtifacts } from '@/lib/hooks/useArtifacts';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import QuickCaptureButton from '@/components/ui/QuickCaptureButton';
 
 import ArtifactLightbox from '@/components/gallery/ArtifactLightbox';
 import { Artifact } from '@/types';
@@ -99,6 +100,8 @@ export default function GalleryPage() {
                     onClose={() => setSelectedArtifact(null)}
                 />
             )}
+            
+            <QuickCaptureButton />
         </div>
     );
 }

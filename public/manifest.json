@@ -18,5 +18,55 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Audio",
+      "short_name": "Audio",
+      "description": "Record audio instantly",
+      "url": "/capture?mode=audio",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Quick Photo",
+      "short_name": "Photo", 
+      "description": "Take a photo instantly",
+      "url": "/capture?mode=photo",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Quick Note",
+      "short_name": "Note",
+      "description": "Write a quick note",
+      "url": "/capture?mode=text",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Gallery",
+      "short_name": "Gallery",
+      "description": "View your artifacts",
+      "url": "/gallery",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
