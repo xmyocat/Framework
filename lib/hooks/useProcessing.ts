@@ -7,6 +7,7 @@ export function useProcessing() {
     const supabase = createClient();
 
     const processArtifact = async (artifact: Artifact) => {
+        console.log('🔄 Starting artifact processing:', artifact.id, artifact.type);
         try {
             setProcessing(true);
             let transcript = artifact.transcript;
@@ -14,23 +15,30 @@ export function useProcessing() {
             // 1. Transcribe if audio and no transcript
             try {
                 if (artifact.type === 'audio' && !transcript && artifact.file_urls && artifact.file_urls.length > 0) {
+                    console.log('🎤 Audio artifact needs transcription');
                     const url = artifact.file_urls[0];
                     if (url) {
+                        console.log('📡 Calling transcription API...');
                         const txRes = await fetch('/api/transcribe', {
                             method: 'POST',
                             body: JSON.stringify({ fileUrl: url }),
                             headers: { 'Content-Type': 'application/json' }
                         });
+                        
                         if (txRes.ok) {
                             const txData = await txRes.json();
-                            transcript = txData.text;
+                            transcript = txData.text || '';
+                            console.log('✅ Transcription successful:', transcript?.length || 0, 'characters');
                         } else {
-                            console.error('Transcription failed:', await txRes.text());
+                            const errorText = await txRes.text();
+                            console.error('❌ Transcription failed:', txRes.status, errorText);
                         }
                     }
+                } else {
+                    console.log('ℹ️ No transcription needed - type:', artifact.type, 'has transcript:', !!transcript);
                 }
             } catch (txErr) {
-                console.error('Transcription error:', txErr);
+                console.error('❌ Transcription error:', txErr);
             }
 
             // 2. Organize (Auto-tag)
@@ -62,14 +70,20 @@ export function useProcessing() {
                 ...organizationData,
                 processed: true
             };
+            
+            console.log('💾 Updating artifact in database:', updates);
 
             const { error: updateError } = await supabase
                 .from('artifacts')
                 .update(updates)
                 .eq('id', artifact.id);
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.error('❌ Database update error:', updateError);
+                throw updateError;
+            }
 
+            console.log('✅ Artifact processing completed successfully');
             return { success: true, ...updates };
 
         } catch (error) {

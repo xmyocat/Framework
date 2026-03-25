@@ -12,7 +12,7 @@ import ArtifactLightbox from '@/components/gallery/ArtifactLightbox';
 import { Artifact } from '@/types';
 
 export default function GalleryPage() {
-    const { artifacts, loading } = useArtifacts();
+    const { artifacts, loading, deleteArtifact } = useArtifacts();
     const [filter, setFilter] = useState<FilterType>('all');
     const [search, setSearch] = useState('');
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
@@ -38,6 +38,15 @@ export default function GalleryPage() {
 
         return matchesType && matchesSearch;
     });
+
+    const handleDelete = async (artifact: Artifact) => {
+        try {
+            await deleteArtifact(artifact.id);
+        } catch (error) {
+            console.error('Failed to delete artifact:', error);
+            alert('Failed to delete artifact. Please try again.');
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
@@ -77,21 +86,9 @@ export default function GalleryPage() {
                 ) : (
                     <ArtifactGrid
                         artifacts={filteredArtifacts}
-                        onArtifactClick={(art) => setSelectedArtifact(art)} // Single click now opens it too? User asked for double click. 
-                        // I will make single click act as selection or "view details" and double click as fullscreen.
-                        // Actually, looking at `ArtifactLightbox`, it IS the fullscreen view.
-                        // If I bind `onArtifactClick` to `setSelectedArtifact`, single click opens it.
-                        // The user specifically asked: "double click/double tap to fullscreen".
-                        // This implies single click might do something else or nothing.
-                        // If I map onClick -> setSelectedArtifact, user gets fullscreen on single click.
-                        // If I map onDoubleClick -> setSelectedArtifact, user gets it on double.
-                        // But what about single click? Currently it logs to console.
-                        // I'll map BOTH for now to be safe, or just onDoubleClick if adhering strictly.
-                        // "double click/double tap to fullscreen a photo/video"
-                        // I'll make single click harmless (maybe just console log or select highlight), and double click open lightbox.
-                        // BUT on mobile "double tap" is tricky if single tap doesn't do anything visible.
-                        // Let's implement double click for lightbox, and keep single click as console log for now.
+                        onArtifactClick={(art) => setSelectedArtifact(art)} 
                         onArtifactDoubleClick={(art) => setSelectedArtifact(art)}
+                        onArtifactDelete={handleDelete}
                     />
                 )}
             </main>
