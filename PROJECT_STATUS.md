@@ -45,13 +45,14 @@
 
 ## 🛠️ Development Principles
 
-### 🧪 **Test-As-You-Go Rule** (CRITICAL)
+### 🧪 **Test-As-You-Go Rule** (CRITICAL - USER REQUIREMENT)
 *   **MANDATORY**: All code must be tested immediately after implementation
 *   **NO EXCEPTIONS**: Never wait for user to report bugs
 *   **PROACTIVE DEBUGGING**: Run commands, test features, validate functionality
 *   **END-TO-END TESTING**: Test complete user flows before marking as complete
 *   **ERROR HANDLING**: Verify error states and user feedback work correctly
 *   **BROWSER TESTING**: Test actual functionality in browser, not just code analysis
+*   **USER REQUIREMENT**: ⚠️ **USER EXPLICITLY REQUESTED: "Please remember that I want you to do the testing before I do"**
 
 ### 🔧 **Infrastructure Setup**
 
