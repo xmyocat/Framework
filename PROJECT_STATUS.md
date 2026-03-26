@@ -43,7 +43,17 @@
     *   **Environment Variables**: All configured and working
     *   **Analytics**: Vercel Analytics setup in progress
 
-## 🛠️ Infrastructure Setup
+## 🛠️ Development Principles
+
+### 🧪 **Test-As-You-Go Rule** (CRITICAL)
+*   **MANDATORY**: All code must be tested immediately after implementation
+*   **NO EXCEPTIONS**: Never wait for user to report bugs
+*   **PROACTIVE DEBUGGING**: Run commands, test features, validate functionality
+*   **END-TO-END TESTING**: Test complete user flows before marking as complete
+*   **ERROR HANDLING**: Verify error states and user feedback work correctly
+*   **BROWSER TESTING**: Test actual functionality in browser, not just code analysis
+
+### 🔧 **Infrastructure Setup**
 
 ### Environment Variables (`.env.local`)
 Required keys:
@@ -162,4 +172,4 @@ The Framework is now fully operational and deployed worldwide:
 **🌐 Global Access**: FULLY WORKING ✅
 **�️ Delete Functionality**: ❌ **BROKEN** - Requires immediate debugging
 **🎙️ Transcription Service**: ❌ **BROKEN** - Requires immediate debugging
-**�📊 Analytics**: SETUP IN PROGRESS ✅
+**�� Analytics**: SETUP IN PROGRESS ✅
