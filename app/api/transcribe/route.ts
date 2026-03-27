@@ -1,61 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { transcribeAudio } from '@/lib/processing/transcription';
-import { createClient } from '@/lib/supabase/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/options';
+import { downloadFile } from '@/lib/storage/local';
 
 export async function POST(req: NextRequest) {
-    console.log('🎤 Transcription API called');
+    console.log('Transcription API called');
     
     try {
-        const supabase = await createClient();
-        // Check session
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            console.log('❌ No session found');
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            console.log('No session found');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        console.log('✅ Session valid for user:', session.user.id);
+        console.log('Session valid for user:', session.user.id);
 
-        // Parse body
         const { fileUrl } = await req.json();
         if (!fileUrl) {
-            console.log('❌ No fileUrl provided');
+            console.log('No fileUrl provided');
             return NextResponse.json({ error: 'No fileUrl provided' }, { status: 400 });
         }
-        console.log('📁 File URL:', fileUrl);
+        console.log('File URL:', fileUrl);
 
-        // Extract path from URL (e.g., .../artifacts/audio/123.webm -> audio/123.webm)
-        // Adjust logic to be robust for your specific URL structure
-        const urlObj = new URL(fileUrl);
-        const pathParts = urlObj.pathname.split('/artifacts/');
-        if (pathParts.length < 2) {
-            console.log('❌ Invalid file URL format:', urlObj.pathname);
+        // Extract path from URL (e.g., /api/files/audio/123.webm -> audio/123.webm)
+        const pathMatch = fileUrl.match(/\/api\/files\/(.+)/);
+        if (!pathMatch) {
+            console.log('Invalid file URL format:', fileUrl);
             return NextResponse.json({ error: 'Invalid file URL format' }, { status: 400 });
         }
-        const storagePath = decodeURIComponent(pathParts[1]);
-        console.log('📂 Storage path:', storagePath);
+        const storagePath = decodeURIComponent(pathMatch[1]);
+        console.log('Storage path:', storagePath);
 
-        // Download from Supabase
-        console.log('⬇️ Downloading file from storage...');
-        const { data: blob, error: downloadError } = await supabase.storage
-            .from('artifacts')
-            .download(storagePath);
+        // Download from local storage
+        console.log('Downloading file from storage...');
+        const fileBuffer = await downloadFile(storagePath);
+        console.log('File downloaded successfully, size:', fileBuffer.length);
 
-        if (downloadError || !blob) {
-            console.error('❌ Download error:', downloadError);
-            return NextResponse.json({ error: 'Failed to download file from storage' }, { status: 500 });
-        }
-        console.log('✅ File downloaded successfully, size:', blob.size, 'type:', blob.type);
+        // Convert Buffer to Blob for OpenAI
+        const blob = new Blob([new Uint8Array(fileBuffer)], { type: 'audio/webm' });
+        const file = new File([blob], 'audio.webm', { type: 'audio/webm' });
 
-        // Convert Blob to File for OpenAI
-        const file = new File([blob], 'audio.webm', { type: blob.type || 'audio/webm' });
-
-        console.log('🤖 Starting transcription with OpenAI...');
+        console.log('Starting transcription with OpenAI...');
         const transcript = await transcribeAudio(file);
-        console.log('✅ Transcription completed, length:', transcript.length);
+        console.log('Transcription completed, length:', transcript.length);
 
         return NextResponse.json({ text: transcript });
     } catch (error) {
-        console.error('❌ Transcription API error:', error);
+        console.error('Transcription API error:', error);
         console.error('Error details:', {
             message: error instanceof Error ? error.message : 'Unknown error',
             stack: error instanceof Error ? error.stack : 'No stack',
