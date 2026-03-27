@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  password      String     // Hashed with bcrypt
+  role          String     @default("student") // student, teacher
+  displayName   String?    @map("display_name")
+  settings      Json?      @default("{}")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  
+  // Relations
+  artifacts     Artifact[]
+  collections   Collection[]
+  reflections   Reflection[]
+  profile       Profile?
+
+  @@map("users")
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  role            String?  // student, teacher
+  displayName     String?  @map("display_name")
+  settings        Json?    @default("{}")
+  linkedTeacherIds String[] @map("linked_teacher_ids")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Artifact {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  type          String   // audio, image, text, video, mixed
+  
+  // Raw content
+  fileUrls      String[] @map("file_urls") // Array of storage paths
+  textContent   String?  @map("text_content")
+  
+  // Processed content
+  transcript    String?
+  thumbnailUrl  String?  @map("thumbnail_url")
+  
+  // Organization
+  autoTags      String[] @map("auto_tags")
+  userTags      String[] @map("user_tags")
+  subject       String?
+  connections   String[] // Related artifact IDs
+  
+  // Metadata
+  processed     Boolean  @default(false)
+  visibility    String   @default("private") // private, teacher, public
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("artifacts")
+}
+
+model Collection {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  name          String?
+  type          String   // auto, manual
+  artifactIds   String[] @map("artifact_ids")
+  coverImageUrl String?  @map("cover_image_url")
+  subject       String?
+  dateRange     String?  @map("date_range") // Simplified as string for now
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("collections")
+}
+
+model Reflection {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  artifactId    String?  @map("artifact_id")
+  collectionId  String?  @map("collection_id")
+  
+  contentBlocks Json?    @map("content_blocks")
+  depthIndicator Int?    @map("depth_indicator")
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reflections")
+}

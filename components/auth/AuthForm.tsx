@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
@@ -11,7 +11,6 @@ export default function AuthForm() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
-    const supabase = createClient();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,12 +18,15 @@ export default function AuthForm() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
+            const result = await signIn('credentials', {
                 email,
                 password,
+                redirect: false
             });
 
-            if (error) throw error;
+            if (result?.error) {
+                throw new Error(result.error);
+            }
 
             router.push('/capture');
             router.refresh();
@@ -36,25 +38,43 @@ export default function AuthForm() {
         }
     };
 
-    const handleSignUp = async (e: React.FormEvent) => { // Optional for testing
+    const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
         try {
-            const { error } = await supabase.auth.signUp({
-                email,
-                password
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
             });
-            if (error) throw error;
-            alert('Check your email for the confirmation link!');
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to create account');
+            }
+
+            // Auto-login after signup
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false
+            });
+
+            if (result?.error) {
+                throw new Error(result.error);
+            }
+
+            router.push('/capture');
+            router.refresh();
         } catch (err) {
             const e = err as Error;
             setError(e.message);
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     return (
         <div className="w-full max-w-sm p-6 bg-white rounded-xl shadow-lg border border-slate-100">

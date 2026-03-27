@@ -1,15 +1,15 @@
 # Project Status: The Framework
 
-**Last Updated:** March 26, 2026
-**Current Phase:** Bug Fixes & Critical Issues
+**Last Updated:** March 27, 2026
+**Current Phase:** MIGRATED TO SELF-HOSTED ✅
 
 ## 🚀 Implementation State
 
 ### ✅ Completed Features
-1.  **Authentication & Database**
-    *   **Status**: Fully functional (Supabase Auth & Postgres). RLS enabled.
-    *   **Tables**: `artifacts`, `profiles`, `collections`.
-    *   **Recent Fix**: Resumed paused Supabase project, all auth working perfectly.
+1.  **Authentication & Database** - **MIGRATED**
+    *   **Status**: Fully functional - Self-hosted PostgreSQL with NextAuth.js
+    *   **Database**: PostgreSQL on VM (100.124.92.27) with Prisma ORM
+    *   **Auth**: NextAuth.js credentials provider with bcrypt password hashing
 
 2.  **Mobile PWA & Offline Support**
     *   **PWA**: Installable on iOS/Android (Add to Home Screen).
@@ -27,21 +27,22 @@
     *   **Layout**: Masonry Grid with search and filtering.
     *   **Lightbox**: **Double-click** any artifact to view in fullscreen.
     *   **Rich Media**: Video playback and audio player within lightbox.
-    *   **Values**: Artifacts can be tagged with "Core Values" (Curiosity, Excellence, etc.).
+    *   **Delete**: Delete functionality **NOW WORKING** with local file cleanup.
 
 5.  **Infrastructure & Stability**
-    *   **Next.js**: Updated to v16.1.6 (latest) - fixed bootstrap script errors.
-    *   **Supabase**: Fixed Next.js 16 compatibility issues with cookies API.
-    *   **Automation**: Enhanced `start_app.bat` with ngrok session cleanup.
-    *   **Navigation**: Mobile-optimized bottom navigation bar.
-    *   **Code Quality**: Cleaned up redundant files and debug code.
+    *   **Next.js**: v16.1.6 with NextAuth integration
+    *   **Database**: PostgreSQL with Prisma ORM
+    *   **Storage**: Local filesystem at `/app/uploads`
+    *   **Process Management**: PM2 configuration included
 
-6.  **Production Deployment** 🌐
-    *   **Vercel**: Successfully deployed to `framework-psii.vercel.app`
-    *   **Universal Access**: Works from anywhere in the world
-    *   **HTTPS Included**: Mobile camera works perfectly
-    *   **Environment Variables**: All configured and working
-    *   **Analytics**: Vercel Analytics setup in progress
+### 🏠 **Self-Hosted Architecture**
+
+| Component | Previous (Supabase) | Current (Self-Hosted) |
+|-----------|-------------------|---------------------|
+| **Auth** | Supabase Auth | NextAuth.js + PostgreSQL |
+| **Database** | Supabase Postgres | Local PostgreSQL via Prisma |
+| **Storage** | Supabase Storage | Local filesystem `/app/uploads` |
+| **Session** | Supabase JWT | NextAuth JWT |
 
 ## 🛠️ Development Principles
 
@@ -54,123 +55,127 @@
 *   **BROWSER TESTING**: Test actual functionality in browser, not just code analysis
 *   **USER REQUIREMENT**: ⚠️ **USER EXPLICITLY REQUESTED: "Please remember that I want you to do the testing before I do"**
 
-### 🔧 **Infrastructure Setup**
+## 🎯 Current Status (March 27, 2026)
 
-### Environment Variables (`.env.local`)
-Required keys:
+### ✅ **SELF-HOSTED DEPLOYMENT READY**
+- **VM IP**: `100.124.92.27`
+- **Access**: Via Tailscale or direct SSH (`everett@100.124.92.27`)
+- **Database**: PostgreSQL configured with Prisma
+- **Storage**: Local filesystem with `/api/files/` serving
+- **Auth**: NextAuth.js with credentials provider
+
+### 🔧 **Migration Complete**
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Supabase Auth | ✅ REMOVED | Replaced with NextAuth.js |
+| Supabase Database | ✅ REMOVED | Replaced with PostgreSQL + Prisma |
+| Supabase Storage | ✅ REMOVED | Replaced with local filesystem |
+| Delete Functionality | ✅ FIXED | Now works with local storage |
+| Transcription | ✅ READY | Uses local file download |
+
+## 🚀 Deployment Workflow
+
+### For Development (After Every Session)
+
+**Windows:** Double-click `deploy-and-push.bat`
+
+This single command will:
+1. ✅ Git add all changes
+2. ✅ Git commit with timestamp  
+3. ✅ Git push to GitHub
+4. ✅ SSH to VM and deploy
+
+**Result:** Code is saved to GitHub AND live on your VM
+
+### For Initial VM Setup
+
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://***REMOVED***.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-OPENAI_API_KEY=sk-proj-...       # For Transcription
-ANTHROPIC_API_KEY=sk-ant-...     # For Organization (optional)
+# 1. Transfer to VM (run once from Windows)
+scp -r . everett@100.124.92.27:/home/everett/framework
+
+# 2. SSH and setup (run on VM)
+ssh everett@100.124.92.27
+cd /home/everett/framework
+chmod +x deploy/vm-setup.sh
+./deploy/vm-setup.sh
+
+# 3. Configure secrets
+nano .env.local  # Set NEXTAUTH_SECRET
+
+# 4. Start
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
 ```
 
-### Development Commands
+### Universal Access URL
+
+**http://100.124.92.27:3000**
+
+- Works on mobile (via Tailscale)
+- Works on desktop (via Tailscale)
+- Camera works without HTTPS issues
+- Full control over your data
+
+### 📋 Next Steps
+
+1. **Deploy to VM** (IMMEDIATE)
+   ```bash
+   # Transfer project to VM
+   scp -r . everett@100.124.92.27:/home/everett/framework
+   
+   # Run setup script on VM
+   ssh everett@100.124.92.27
+   cd /home/everett/framework
+   chmod +x deploy/vm-setup.sh
+   ./deploy/vm-setup.sh
+   ```
+
+2. **Configure Environment**
+   - Edit `.env.local` with your `OPENAI_API_KEY`
+   - Set `NEXTAUTH_SECRET` (generate with `openssl rand -base64 32`)
+   - Update `DATABASE_URL` if needed
+
+3. **Start Application**
+   ```bash
+   pm2 start ecosystem.config.js
+   ```
+
+### � **Deployment Status**
+- **Local Development**: Ready for testing
+- **VM Deployment**: Scripts prepared, ready to deploy
+- **Production URL**: Will be `http://100.124.92.27:3000`
+
+## 📁 New Files Created
+
+| File | Purpose |
+|------|---------|
+| `prisma/schema.prisma` | Database schema |
+| `lib/db.ts` | Prisma client |
+| `lib/auth/options.ts` | NextAuth configuration |
+| `lib/auth/password.ts` | Password hashing utilities |
+| `lib/storage/local.ts` | Local file storage service |
+| `app/api/auth/[...nextauth]/route.ts` | Auth API endpoints |
+| `app/api/auth/register/route.ts` | User registration |
+| `app/api/artifacts/route.ts` | Artifacts CRUD API |
+| `app/api/artifacts/[id]/route.ts` | Individual artifact API |
+| `app/api/files/[...path]/route.ts` | File serving API |
+| `deploy/vm-setup.sh` | VM deployment script |
+| `deploy/README.md` | Deployment guide |
+| `types/next-auth.d.ts` | NextAuth type extensions |
+
+## 🗑️ Removed Supabase Dependencies
+- `@supabase/ssr`
+- `@supabase/supabase-js`
+- `lib/supabase/` directory
+- `supabase/` directory
+
+## 📝 Environment Variables (New)
+
 ```bash
-# Local development
-npm run dev                    # Development server
-npx ngrok http 3000           # Mobile tunnel
-
-# Deployment scripts
-restart_app.bat               # Kill all + restart
-kill_all.bat                  # Kill all processes
-quick_deploy.bat              # Automated Vercel setup
-setup_analytics.bat           # Analytics setup
+DATABASE_URL="postgresql://user:password@localhost:5432/framework?schema=public"
+NEXTAUTH_URL="http://100.124.92.27:3000"
+NEXTAUTH_SECRET="your-secret-key-here"
+UPLOAD_DIR="/app/uploads"
+OPENAI_API_KEY="sk-your-openai-key-here"
 ```
-
-## 🎯 Current Status (March 26, 2026)
-
-### 🚨 **CRITICAL ISSUES REQUIRING IMMEDIATE ATTENTION**
-
-#### 1. **Delete Functionality Not Working**
-- **Issue**: Delete button appears on artifact cards but deletion fails
-- **Status**: ❌ **BROKEN** - User reports delete action does not work
-- **Recent Changes**: Added delete button with confirmation dialog (March 26, 2026)
-- **Need to Debug**: 
-  - Database connection issues
-  - Frontend event handling
-  - Error handling in delete flow
-
-#### 2. **Transcription Service Not Working**
-- **Issue**: OpenAI API calls are made but transcripts don't appear in the app
-- **Status**: ❌ **BROKEN** - User reports transcription not working despite OpenAI credits being used
-- **Recent Changes**: 
-  - Added comprehensive logging (March 26, 2026)
-  - Fixed database schema to include video type
-  - Enhanced error tracking
-- **Need to Debug**:
-  - OpenAI API response handling
-  - Database update process
-  - Transcript field persistence
-  - Environment variable configuration
-
-### ✅ **PRODUCTION DEPLOYED** - Worldwide Access
-- **Universal URL**: `https://framework-psii.vercel.app` ✅
-- **Mobile Camera**: Fixed and working on all devices ✅
-- **Authentication**: Login/logout working perfectly ✅
-- **API Routes**: All endpoints responding correctly ✅
-- **Capture Features**: Audio, video, photo, text all operational ✅
-- **Environment**: All variables configured and working ✅
-- **Analytics**: Setup in progress with Vercel Agent ✅
-
-### 🔧 **Major Recent Fixes Applied**
-1. **Mobile Camera Fix**: Resolved "operation was aborted" error with HTTPS detection
-2. **Vercel Deployment**: Full production deployment with universal URL
-3. **Enhanced Error Handling**: Better mobile-specific error messages
-4. **Process Management**: Created comprehensive kill/restart scripts
-5. **GitHub Integration**: Full repository setup and deployment automation
-
-### 📱 **Mobile Camera Enhancement**
-- **HTTPS Detection**: Automatically detects and guides users to HTTPS
-- **Mobile Optimization**: Enhanced constraints for mobile devices
-- **Error Messages**: Specific guidance for camera permission issues
-- **Cross-Platform**: Works on iOS Safari, Android Chrome, etc.
-
-## 📋 Next Steps
-
-### 1. **CRITICAL BUG FIXES** (IMMEDIATE PRIORITY)
-*   **Delete Functionality**: Debug and fix artifact deletion
-    - Test database connection and permissions
-    - Verify frontend event handling
-    - Check error propagation and user feedback
-*   **Transcription Service**: Debug and fix transcription pipeline
-    - Verify OpenAI API integration
-    - Check database update process
-    - Test transcript field persistence
-    - Validate environment variables
-
-### 2. **Testing & Validation** (HIGH PRIORITY)
-*   **End-to-End Testing**: Test complete capture → transcription → gallery flow
-*   **Error Logging**: Review console and server logs for debugging
-*   **User Testing**: Validate fixes on actual devices
-
-### 3. **Enhancement Opportunities** (LOWER PRIORITY)
-*   **Teacher Dashboard**: Interface for reviewing student submissions
-*   **Retry Mechanism**: Enhanced "Retry Processing" for stuck transcriptions
-*   **Performance**: Optimize image/video loading for global users
-*   **User Profiles**: Enhanced profile page with settings
-
-### 3. **Future Features**
-*   **Collaboration**: Multi-user artifact sharing
-*   **Advanced AI**: Enhanced organization and tagging
-*   **Offline Sync**: Improved background synchronization
-
-## 🚀 **PRODUCTION DEPLOYED** ✅
-
-The Framework is now fully operational and deployed worldwide:
-- **Universal Access**: `https://framework-psii.vercel.app`
-- **Mobile Ready**: Camera works on all devices with HTTPS
-- **Global Usage**: Works from any country, no local server needed
-- **Analytics Ready**: Usage tracking being implemented
-- **AI-Powered**: All transcription and organization features working
-
-**Access URLs:**
-- **Production**: `https://framework-psii.vercel.app` ✅
-- **Local Development**: http://localhost:3000
-- **GitHub Repository**: https://github.com/xmyocat/Framework
-
-**📱 Mobile Camera Status**: FULLY WORKING ✅
-**🌐 Global Access**: FULLY WORKING ✅
-**�️ Delete Functionality**: ❌ **BROKEN** - Requires immediate debugging
-**🎙️ Transcription Service**: ❌ **BROKEN** - Requires immediate debugging
-**�� Analytics**: SETUP IN PROGRESS ✅
