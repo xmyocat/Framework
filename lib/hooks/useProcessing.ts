@@ -12,9 +12,9 @@ export function useProcessing() {
 
             // 1. Transcribe if audio and no transcript
             try {
-                if (artifact.type === 'audio' && !transcript && artifact.file_urls && artifact.file_urls.length > 0) {
+                if (artifact.type === 'audio' && !transcript && artifact.fileUrls && artifact.fileUrls.length > 0) {
                     console.log('Audio artifact needs transcription');
-                    const url = artifact.file_urls[0];
+                    const url = artifact.fileUrls[0];
                     if (url) {
                         console.log('Calling transcription API...');
                         const txRes = await fetch('/api/transcribe', {
@@ -40,7 +40,7 @@ export function useProcessing() {
             }
 
             // 2. Organize (Auto-tag)
-            const contentToOrganize = transcript || artifact.text_content;
+            const contentToOrganize = transcript || artifact.textContent;
             let organizationData = {};
 
             try {

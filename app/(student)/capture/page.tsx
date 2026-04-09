@@ -7,7 +7,7 @@ import AudioRecorder from '@/components/capture/AudioRecorder';
 import VideoCapture from '@/components/capture/VideoCapture';
 import PhotoCapture from '@/components/capture/PhotoCapture';
 import TextInput from '@/components/capture/TextInput';
-import { createClient } from '@/lib/supabase/client';
+import { useSession } from 'next-auth/react';
 import { useArtifacts } from '@/lib/hooks/useArtifacts';
 import { uploadArtifactFile } from '@/lib/utils/storage';
 import { useProcessing } from '@/lib/hooks/useProcessing';
@@ -16,31 +16,46 @@ import { savePendingArtifact } from '@/lib/utils/offline-storage';
 
 type CaptureMode = 'menu' | 'audio' | 'photo' | 'text' | 'video';
 
+function useAuthSession() {
+    try {
+        return useSession();
+    } catch {
+        // Return mock session during SSR
+        return { data: null, status: 'loading' };
+    }
+}
+
 export default function CapturePage() {
     const [mode, setMode] = useState<CaptureMode>('menu');
     const [isSaving, setIsSaving] = useState(false);
-    const supabase = createClient();
+    const [mounted, setMounted] = useState(false);
+    const sessionData = useAuthSession();
+    const status = sessionData?.status || 'loading';
     const { createArtifact } = useArtifacts();
     const { processArtifact } = useProcessing();
     const router = useRouter();
 
     useEffect(() => {
-        const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                router.push('/login');
-                return;
-            }
+        setMounted(true);
+        if (status === 'unauthenticated') {
+            router.push('/login');
+            return;
+        }
 
-            // Handle URL parameters for PWA shortcuts
+        // Handle URL parameters for PWA shortcuts
+        if (typeof window !== 'undefined') {
             const urlParams = new URLSearchParams(window.location.search);
             const modeParam = urlParams.get('mode') as CaptureMode;
             if (modeParam && ['audio', 'photo', 'text', 'video'].includes(modeParam)) {
                 setMode(modeParam);
             }
-        };
-        checkUser();
-    }, [supabase, router]);
+        }
+    }, [status, router]);
+
+    // Prevent hydration mismatch - don't render until mounted
+    if (!mounted) {
+        return <div className="flex flex-col min-h-full bg-slate-50" />;
+    }
 
     const handleSaveAudio = async (blob: Blob) => {
         setIsSaving(true);
