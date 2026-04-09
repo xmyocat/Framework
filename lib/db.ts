@@ -1,9 +1,28 @@
 import { PrismaClient } from '@prisma/client'
 
+type PrismaClientSingleton = ReturnType<typeof createPrismaClient>
+
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+  prisma: PrismaClientSingleton | undefined
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+function createPrismaClient() {
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  })
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+function getPrisma() {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient()
+  }
+  return globalForPrisma.prisma
+}
+
+// Export a proxy that lazily creates the client on first property access
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_, prop: string | symbol) {
+    const client = getPrisma()
+    return (client as any)[prop]
+  }
+})

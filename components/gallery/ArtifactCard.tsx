@@ -72,22 +72,22 @@ export default function ArtifactCard({ artifact, onClick, onDoubleClick, onDelet
                         </div>
                     </div>
                 )}
-                {artifact.type === 'image' && artifact.file_urls?.[0] && (
+                {artifact.type === 'image' && artifact.fileUrls?.[0] && (
                     <div className="relative w-full">
                         {/* Using standard img tag for data URLs or external storage URLs if next/image config isn't set up for them yet */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={artifact.file_urls[0]}
+                            src={artifact.fileUrls[0]}
                             alt="Artifact"
                             className="w-full h-auto object-cover"
                         />
                     </div>
                 )}
 
-                {artifact.type === 'video' && artifact.file_urls?.[0] && (
+                {artifact.type === 'video' && artifact.fileUrls?.[0] && (
                     <div className="relative w-full bg-black">
                         <video
-                            src={artifact.file_urls[0]}
+                            src={artifact.fileUrls[0]}
                             className="w-full h-auto object-cover"
                             controls={false} // No controls in card view, play on click/hover? Or just thumbnail.
                         // For now, let's show a play overlay
@@ -118,7 +118,7 @@ export default function ArtifactCard({ artifact, onClick, onDoubleClick, onDelet
                     <div className="bg-amber-50 p-4 min-h-[8rem]">
                         <FileText className="text-amber-300 mb-2" size={24} />
                         <p className="text-slate-700 font-medium line-clamp-3 leading-relaxed">
-                            {artifact.text_content || "No content"}
+                            {artifact.textContent || "No content"}
                         </p>
                     </div>
                 )}
@@ -135,7 +135,7 @@ export default function ArtifactCard({ artifact, onClick, onDoubleClick, onDelet
                         {artifact.type === 'text' && <FileText size={12} />}
                         {artifact.type}
                     </span>
-                    <span>{new Date(artifact.created_at).toLocaleDateString()}</span>
+                    <span>{new Date(artifact.createdAt).toLocaleDateString()}</span>
                 </div>
 
                 {/* Transcript Snippet for Audio */}

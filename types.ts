@@ -8,20 +8,20 @@ export type Json =
 
 export interface Artifact {
     id: string
-    user_id: string
+    userId: string
     type: 'audio' | 'image' | 'text' | 'video' | 'mixed'
-    file_urls: string[] | null
-    text_content: string | null
+    fileUrls: string[] | null
+    textContent: string | null
     transcript: string | null
-    thumbnail_url: string | null
-    auto_tags: string[] | null
-    user_tags: string[] | null
+    thumbnailUrl: string | null
+    autoTags: string[] | null
+    userTags: string[] | null
     subject: string | null
     connections: string[] | null
     processed: boolean
     visibility: 'private' | 'teacher' | 'public'
-    created_at: string
-    updated_at: string
+    createdAt: string
+    updatedAt: string
 }
 
 export interface Collection {

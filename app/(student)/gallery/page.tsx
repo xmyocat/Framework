@@ -1,39 +1,49 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ArtifactGrid from '@/components/gallery/ArtifactGrid';
 import FilterBar, { FilterType } from '@/components/gallery/FilterBar';
 import { useArtifacts } from '@/lib/hooks/useArtifacts';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { useSession } from 'next-auth/react';
 import QuickCaptureButton from '@/components/ui/QuickCaptureButton';
 
 import ArtifactLightbox from '@/components/gallery/ArtifactLightbox';
 import { Artifact } from '@/types';
+
+function useAuthSession() {
+    try {
+        return useSession();
+    } catch {
+        return { data: null, status: 'loading' };
+    }
+}
 
 export default function GalleryPage() {
     const { artifacts, loading, deleteArtifact } = useArtifacts();
     const [filter, setFilter] = useState<FilterType>('all');
     const [search, setSearch] = useState('');
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
-    const supabase = createClient();
+    const [mounted, setMounted] = useState(false);
+    const sessionData = useAuthSession();
+    const status = sessionData?.status || 'loading';
 
-    // Check auth on mount
-    React.useEffect(() => {
-        const checkUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                window.location.href = '/login';
-            }
-        };
-        checkUser();
-    }, []);
+    useEffect(() => {
+        setMounted(true);
+        if (status === 'unauthenticated') {
+            window.location.href = '/login';
+        }
+    }, [status]);
+
+    if (!mounted) {
+        return <div className="min-h-screen bg-slate-50" />;
+    }
 
     const filteredArtifacts = artifacts.filter(art => {
         const matchesType = filter === 'all' || art.type === filter;
         const matchesSearch = search === '' ||
-            art.text_content?.toLowerCase().includes(search.toLowerCase()) ||
+            art.textContent?.toLowerCase().includes(search.toLowerCase()) ||
             art.transcript?.toLowerCase().includes(search.toLowerCase()) ||
             art.subject?.toLowerCase().includes(search.toLowerCase());
 

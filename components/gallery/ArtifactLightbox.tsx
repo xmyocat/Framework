@@ -13,13 +13,13 @@ export default function ArtifactLightbox({ artifact, onClose }: ArtifactLightbox
     const { updateArtifact, deleteArtifact: removeArtifact } = useArtifacts();
     const { processArtifact, processing } = useProcessing(); // Use the hook
     const [isEditing, setIsEditing] = useState(false);
-    const [textContent, setTextContent] = useState(artifact.text_content || '');
+    const [textContent, setTextContent] = useState(artifact.textContent || '');
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await updateArtifact(artifact.id, { text_content: textContent });
+            await updateArtifact(artifact.id, { textContent: textContent });
             setIsEditing(false);
         } catch (err) {
             alert('Failed to save changes');
@@ -51,10 +51,10 @@ export default function ArtifactLightbox({ artifact, onClose }: ArtifactLightbox
                 onClick={stopProp}
             >
                 {/* Image */}
-                {artifact.type === 'image' && artifact.file_urls?.[0] && (
+                {artifact.type === 'image' && artifact.fileUrls?.[0] && (
                     <div className="flex flex-col items-center gap-4">
                         <img
-                            src={artifact.file_urls[0]}
+                            src={artifact.fileUrls[0]}
                             alt="Full size"
                             className="max-h-[80vh] w-auto object-contain rounded-lg shadow-2xl"
                         />
@@ -75,10 +75,10 @@ export default function ArtifactLightbox({ artifact, onClose }: ArtifactLightbox
                 )}
 
                 {/* Video */}
-                {artifact.type === 'video' && artifact.file_urls?.[0] && (
+                {artifact.type === 'video' && artifact.fileUrls?.[0] && (
                     <div className="flex flex-col items-center gap-4">
                         <video
-                            src={artifact.file_urls[0]}
+                            src={artifact.fileUrls[0]}
                             controls
                             autoPlay
                             className="max-h-[80vh] w-auto max-w-full rounded-lg shadow-2xl"
@@ -107,7 +107,7 @@ export default function ArtifactLightbox({ artifact, onClose }: ArtifactLightbox
                                 <span className="text-4xl">🎤</span>
                             </div>
                             <audio
-                                src={artifact.file_urls?.[0]}
+                                src={artifact.fileUrls?.[0]}
                                 controls
                                 className="w-full"
                             />
