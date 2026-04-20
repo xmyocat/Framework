@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { X, Save, RotateCcw } from 'lucide-react';
 
 interface VideoCaptureProps {
@@ -12,65 +12,64 @@ export default function VideoCapture({ onSave, onCancel }: VideoCaptureProps) {
     const [chunks, setChunks] = useState<Blob[]>([]);
     const [isRecording, setIsRecording] = useState(false);
     const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+    const [recordedVideoUrl, setRecordedVideoUrl] = useState<string | null>(null);
     const [duration, setDuration] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     // Track stream in ref for cleanup to avoid dependency issues
     const streamRef = useRef<MediaStream | null>(null);
 
-    useEffect(() => {
-        const startCamera = async () => {
-            try {
-                // Check if we're on HTTP (mobile browsers block camera on HTTP)
-                if (window.location.protocol === 'http:' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                    throw new Error('Camera access requires HTTPS on mobile devices. Please use the ngrok HTTPS URL.');
-                }
-
-                // Enhanced mobile camera constraints
-                const constraints = {
-                    video: {
-                        facingMode: 'environment', // prefer rear camera on phones
-                        width: { ideal: 1920, max: 1920 },
-                        height: { ideal: 1080, max: 1080 }
-                    },
-                    audio: true
-                };
-
-                const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-                streamRef.current = mediaStream;
-                if (videoRef.current) {
-                    videoRef.current.srcObject = mediaStream;
-                    videoRef.current.setAttribute('playsinline', 'true');
-                    videoRef.current.setAttribute('muted', 'true');
-                    videoRef.current.playsInline = true;
-                    videoRef.current.muted = true;
-                }
-            } catch (err) {
-                console.error("Error accessing camera:", err);
-                let errorMessage = "Could not access camera. Please allow permissions.";
-                
-                if (err instanceof Error) {
-                    if (err.name === 'NotAllowedError') {
-                        errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
-                    } else if (err.name === 'NotFoundError') {
-                        errorMessage = 'No camera found on this device.';
-                    } else if (err.name === 'NotSupportedError') {
-                        errorMessage = 'Camera not supported by this browser.';
-                    } else if (err.name === 'NotReadableError') {
-                        errorMessage = 'Camera is already in use by another application.';
-                    } else if (err.name === 'OverconstrainedError') {
-                        errorMessage = 'Camera does not support the required constraints.';
-                    } else if (err.name === 'AbortError') {
-                        errorMessage = 'Camera access was aborted. Please try again.';
-                    } else if (err.message.includes('HTTPS')) {
-                        errorMessage = err.message;
-                    }
-                }
-                
-                alert(errorMessage);
-                onCancel();
+    const startCamera = useCallback(async () => {
+        try {
+            if (window.location.protocol === 'http:' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                throw new Error('Camera access requires HTTPS on mobile devices. Please use the ngrok HTTPS URL.');
             }
-        };
 
+            const constraints = {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1920, max: 1920 },
+                    height: { ideal: 1080, max: 1080 }
+                },
+                audio: true
+            };
+
+            const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamRef.current = mediaStream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = mediaStream;
+                videoRef.current.setAttribute('playsinline', 'true');
+                videoRef.current.setAttribute('muted', 'true');
+                videoRef.current.playsInline = true;
+                videoRef.current.muted = true;
+            }
+        } catch (err) {
+            console.error("Error accessing camera:", err);
+            let errorMessage = "Could not access camera. Please allow permissions.";
+
+            if (err instanceof Error) {
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = 'No camera found on this device.';
+                } else if (err.name === 'NotSupportedError') {
+                    errorMessage = 'Camera not supported by this browser.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage = 'Camera is already in use by another application.';
+                } else if (err.name === 'OverconstrainedError') {
+                    errorMessage = 'Camera does not support the required constraints.';
+                } else if (err.name === 'AbortError') {
+                    errorMessage = 'Camera access was aborted. Please try again.';
+                } else if (err.message.includes('HTTPS')) {
+                    errorMessage = err.message;
+                }
+            }
+
+            alert(errorMessage);
+            onCancel();
+        }
+    }, [onCancel]);
+
+    useEffect(() => {
         startCamera();
 
         return () => {
@@ -78,6 +77,9 @@ export default function VideoCapture({ onSave, onCancel }: VideoCaptureProps) {
                 streamRef.current.getTracks().forEach(track => track.stop());
             }
             if (timerRef.current) clearInterval(timerRef.current);
+            if (recordedVideoUrl) {
+                URL.revokeObjectURL(recordedVideoUrl);
+            }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -109,6 +111,14 @@ export default function VideoCapture({ onSave, onCancel }: VideoCaptureProps) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
             if (timerRef.current) clearInterval(timerRef.current);
+            // Release camera/mic while the user reviews the recording
+            if (streamRef.current) {
+                streamRef.current.getTracks().forEach(track => track.stop());
+                streamRef.current = null;
+            }
+            if (videoRef.current) {
+                videoRef.current.srcObject = null;
+            }
         }
     };
 
@@ -116,6 +126,8 @@ export default function VideoCapture({ onSave, onCancel }: VideoCaptureProps) {
         if (!isRecording && chunks.length > 0) {
             const blob = new Blob(chunks, { type: 'video/webm' });
             setRecordedBlob(blob);
+            const url = URL.createObjectURL(blob);
+            setRecordedVideoUrl(url);
         }
     }, [isRecording, chunks]);
 
@@ -126,9 +138,17 @@ export default function VideoCapture({ onSave, onCancel }: VideoCaptureProps) {
     };
 
     const handleRetake = () => {
+        if (recordedVideoUrl) {
+            URL.revokeObjectURL(recordedVideoUrl);
+        }
         setRecordedBlob(null);
+        setRecordedVideoUrl(null);
         setChunks([]);
         setDuration(0);
+        // Camera was released when recording stopped — reacquire it
+        if (!streamRef.current) {
+            startCamera();
+        }
     };
 
     const formatTime = (seconds: number) => {
@@ -141,9 +161,9 @@ export default function VideoCapture({ onSave, onCancel }: VideoCaptureProps) {
         <div className="flex flex-col h-full bg-black">
             {/* Header / Camera View */}
             <div className="relative flex-1 overflow-hidden bg-black flex items-center justify-center">
-                {recordedBlob ? (
+                {recordedVideoUrl ? (
                     <video
-                        src={URL.createObjectURL(recordedBlob)}
+                        src={recordedVideoUrl}
                         controls
                         className="max-h-full max-w-full object-contain"
                     />
@@ -167,7 +187,7 @@ export default function VideoCapture({ onSave, onCancel }: VideoCaptureProps) {
 
             {/* Controls */}
             <div className="h-32 bg-black/90 p-6 flex items-center justify-center gap-8">
-                {recordedBlob ? (
+                {recordedVideoUrl ? (
                     <>
                         <button
                             onClick={handleRetake}

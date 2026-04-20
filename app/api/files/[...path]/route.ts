@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { cwd } from 'process'
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads'
+const UPLOAD_DIR = process.env.UPLOAD_DIR || join(cwd(), 'uploads')
 
 export async function GET(
   request: NextRequest,
@@ -26,20 +27,22 @@ export async function GET(
     }
     
     const fileBuffer = await readFile(filePath)
-    
-    // Determine content type based on extension
+
     const ext = path[path.length - 1].split('.').pop()?.toLowerCase()
+    const folder = path[0]
     const contentTypes: Record<string, string> = {
       'jpg': 'image/jpeg',
       'jpeg': 'image/jpeg',
       'png': 'image/png',
       'webp': 'image/webp',
-      'webm': filePath.includes('audio') ? 'audio/webm' : 'video/webm',
+      'webm': folder === 'audio' ? 'audio/webm' : 'video/webm',
       'mp4': 'video/mp4',
+      'mov': 'video/quicktime',
       'mp3': 'audio/mpeg',
-      'wav': 'audio/wav'
+      'wav': 'audio/wav',
+      'ogg': folder === 'audio' ? 'audio/ogg' : 'video/ogg'
     }
-    
+
     const contentType = contentTypes[ext || ''] || 'application/octet-stream'
     
     return new NextResponse(fileBuffer, {
