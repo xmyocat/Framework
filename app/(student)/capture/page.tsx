@@ -163,9 +163,7 @@ export default function CapturePage() {
     const handleSaveVideo = async (blob: Blob) => {
         setIsSaving(true);
         try {
-            // Using 'images' bucket for now, assuming it accepts video or we will update storage.ts later
-            // We cast to any because we haven't updated the uploadArtifactFile signature yet
-            const publicUrl = await uploadArtifactFile(blob, 'images');
+            const publicUrl = await uploadArtifactFile(blob, 'video');
 
             if (!publicUrl) throw new Error('Upload failed');
 

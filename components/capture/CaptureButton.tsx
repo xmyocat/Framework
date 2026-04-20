@@ -12,10 +12,10 @@ export default function CaptureButton({ icon: Icon, label, onClick, colorClass }
     return (
         <button
             onClick={onClick}
-            className={`relative flex flex-col items-center justify-center p-6 rounded-3xl shadow-lg transition-transform active:scale-95 w-full aspect-square ${colorClass}`}
+            className={`relative flex flex-col items-center justify-center p-4 rounded-2xl shadow-lg transition-transform active:scale-95 w-full h-32 ${colorClass}`}
         >
-            <Icon size={48} className="mb-3 opacity-90" />
-            <span className="text-xl font-bold tracking-tight opacity-95">{label}</span>
+            <Icon size={36} className="mb-2 opacity-90" />
+            <span className="text-lg font-bold tracking-tight opacity-95">{label}</span>
         </button>
     );
 }

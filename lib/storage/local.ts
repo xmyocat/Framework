@@ -2,7 +2,9 @@ import { mkdir, writeFile, readFile, unlink, access } from 'fs/promises'
 import { join } from 'path'
 import { constants } from 'fs'
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads'
+import { cwd } from 'process'
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR || join(cwd(), 'uploads')
 
 export interface StorageResult {
   path: string
