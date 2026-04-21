@@ -66,7 +66,7 @@ export default function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
                 ) : (
                     <video
                         ref={videoRef}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         playsInline
                         muted
                     />
